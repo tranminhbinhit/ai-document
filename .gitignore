@@ -1,0 +1,46 @@
+# Environment variables
+.env
+
+# Docker volumes
+sql-data/
+qdrant-data/
+document-storage/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Backend (.NET)
+backend/**/bin/
+backend/**/obj/
+backend/**/*.user
+backend/**/.vs/
+
+# Frontend (Angular)
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/.angular-cache/
+
+# Indexer (Python)
+indexer/__pycache__/
+indexer/**/*.pyc
+indexer/**/*.pyo
+indexer/.venv/
+indexer/venv/
+
+# MCP Server (Node.js)
+mcp-server/node_modules/
+mcp-server/dist/
+mcp-server/.env

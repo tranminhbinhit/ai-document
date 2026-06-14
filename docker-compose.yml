@@ -1,0 +1,138 @@
+services:
+  sql-server:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: rag-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=${SQL_SA_PASSWORD}
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql-data:/var/opt/mssql
+      - ./scripts:/docker-entrypoint-initdb.d
+    networks:
+      - rag-network
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: rag-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant-data:/qdrant/storage
+    networks:
+      - rag-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: rag-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - rag-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rag-backend
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=sql-server,1433;Database=DocumentRAG;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;
+      - Qdrant__Url=http://qdrant:6333
+      - Redis__Host=redis
+      - Redis__Port=6379
+      - OpenAI__ApiKey=${OPENAI_API_KEY}
+      - OpenAI__EmbeddingModel=text-embedding-3-small
+      - OpenAI__ChatModel=gpt-4o-mini
+      - Storage__Path=/app/storage
+      - RAG__ChunkSize=500
+      - RAG__ChunkOverlap=50
+      - RAG__TopK=3
+    volumes:
+      - document-storage:/app/storage
+    depends_on:
+      - sql-server
+      - qdrant
+      - redis
+    networks:
+      - rag-network
+    restart: unless-stopped
+
+  indexer:
+    build:
+      context: ./indexer
+      dockerfile: Dockerfile
+    container_name: rag-indexer
+    environment:
+      - SQL_CONNECTION_STRING=Server=sql-server,1433;Database=DocumentRAG;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;
+      - QDRANT_URL=http://qdrant:6333
+      - QDRANT_COLLECTION=documents
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_QUEUE=document_processing
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - EMBEDDING_MODEL=text-embedding-3-small
+      - STORAGE_PATH=/app/storage
+      - CHUNK_SIZE=500
+      - CHUNK_OVERLAP=50
+    volumes:
+      - document-storage:/app/storage
+    depends_on:
+      - sql-server
+      - qdrant
+      - redis
+    networks:
+      - rag-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: rag-frontend
+    ports:
+      - "4200:80"
+    environment:
+      - API_URL=http://localhost:5000
+    depends_on:
+      - backend
+    networks:
+      - rag-network
+    restart: unless-stopped
+
+  mcp-server:
+    build:
+      context: ./mcp-server
+      dockerfile: Dockerfile
+    container_name: rag-mcp-server
+    ports:
+      - "3000:3000"
+    environment:
+      - API_URL=http://backend:8080
+      - MCP_PORT=3000
+      - NODE_ENV=production
+    depends_on:
+      - backend
+    networks:
+      - rag-network
+    restart: unless-stopped
+
+volumes:
+  sql-data:
+  qdrant-data:
+  document-storage:
+
+networks:
+  rag-network:
+    driver: bridge
