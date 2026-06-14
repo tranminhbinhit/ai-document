@@ -1,0 +1,70 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "py",
+      "args": ["D:/SOURCE_GIT/AI/ai-mcp/mcp-servers/filesystem/server.py"],
+      "env": {
+        "WORKSPACE_ROOT": "D:/SOURCE_GIT/AI/ai-mcp",
+        "ALLOWED_DIRECTORIES": "D:/SOURCE_GIT/AI/ai-mcp,D:/SOURCE_GIT/AI/ai-mcp/docs,D:/SOURCE_GIT/AI/ai-mcp/requirements,D:/SOURCE_GIT/AI/ai-mcp,D:/DOC-MCP"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "read_file",
+        "list_directory",
+        "parse_pdf",
+        "parse_docx",
+        "parse_xlsx"
+      ]
+    },
+    "gitlab": {
+      "command": "py",
+      "args": ["D:/SOURCE_GIT/AI/ai-mcp/mcp-servers/gitlab/server.py"],
+      "env": {
+        "GITLAB_URL": "${env:GITLAB_URL}",
+        "GITLAB_TOKEN": "${env:GITLAB_TOKEN}",
+        "DEFAULT_PROJECT_ID": "${env:GITLAB_PROJECT_ID}"
+      },
+      "disabled": true,
+      "autoApprove": [
+        "list_merge_requests",
+        "get_merge_request",
+        "list_pipelines",
+        "get_file_content"
+      ]
+    },
+    "sqlserver": {
+      "command": "py",
+      "args": ["D:/SOURCE_GIT/AI/ai-mcp/mcp-servers/sqlserver/server.py"],
+      "env": {
+        "SQL_SERVER": "${env:SQL_SERVER}",
+        "SQL_DATABASE": "${env:SQL_DATABASE}",
+        "SQL_USER": "${env:SQL_USER}",
+        "SQL_PASSWORD": "${env:SQL_PASSWORD}",
+        "READ_ONLY": "true"
+      },
+      "disabled": true,
+      "autoApprove": [
+        "list_tables",
+        "describe_table",
+        "get_table_relationships",
+        "query_readonly",
+        "get_table_sample"
+      ]
+    },
+    "kubernetes": {
+      "command": "py",
+      "args": ["D:/SOURCE_GIT/AI/ai-mcp/mcp-servers/kubernetes/server.py"],
+      "env": {
+        "KUBECONFIG": "${env:KUBECONFIG}",
+        "DEFAULT_NAMESPACE": "production"
+      },
+      "disabled": true,
+      "autoApprove": [
+        "get_logs",
+        "list_pods",
+        "describe_pod",
+        "list_deployments"
+      ]
+    }
+  }
+}
