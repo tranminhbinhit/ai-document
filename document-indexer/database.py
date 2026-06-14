@@ -1,19 +1,15 @@
-import pyodbc
+import pymssql
 from config import DB_CONFIG
 
 
 def get_connection():
-
-    conn_string = f"""
-    DRIVER={{{DB_CONFIG['driver']}}};
-    SERVER={DB_CONFIG['server']};
-    DATABASE={DB_CONFIG['database']};
-    UID={DB_CONFIG['username']};
-    PWD={DB_CONFIG['password']};
-    TrustServerCertificate=yes;
-    """
-
-    return pyodbc.connect(conn_string)
+    """Tạo kết nối SQL Server sử dụng pymssql"""
+    return pymssql.connect(
+        server=DB_CONFIG['server'],
+        database=DB_CONFIG['database'],
+        user=DB_CONFIG['username'],
+        password=DB_CONFIG['password']
+    )
 
 
 
@@ -120,3 +116,24 @@ def search_document(keyword):
 
 
     return result
+
+
+
+def update_document(path, summary, keywords):
+    """Update document metadata"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    sql = """
+    UPDATE Documents
+    SET Summary = ?,
+        Keywords = ?,
+        ModifiedDate = GETDATE()
+    WHERE Path = ?
+    """
+    
+    cursor.execute(sql, summary, keywords, path)
+    conn.commit()
+    
+    cursor.close()
+    conn.close()

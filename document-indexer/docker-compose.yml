@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: document-indexer-db
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong@Password123
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - document-indexer-network
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P YourStrong@Password123 -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
+
+  db-init:
+    image: mcr.microsoft.com/mssql-tools
+    container_name: document-db-init
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    networks:
+      - document-indexer-network
+    volumes:
+      - ./init.sql:/init.sql
+    command: >
+      /bin/bash -c "
+      echo 'Initializing database...' &&
+      /opt/mssql-tools/bin/sqlcmd -S sqlserver -U sa -P YourStrong@Password123 -i /init.sql &&
+      echo 'Database initialized successfully!'
+      "
+
+  document-watcher:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: document-watcher
+    environment:
+      - DB_SERVER=sqlserver
+      - DB_DATABASE=DocumentAI
+      - DB_USER=sa
+      - DB_PASSWORD=YourStrong@Password123
+      - WATCH_FOLDER=/documents
+    volumes:
+      - ${WATCH_FOLDER:-./documents}:/documents
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    networks:
+      - document-indexer-network
+    restart: unless-stopped
+
+volumes:
+  sqlserver_data:
+    driver: local
+
+networks:
+  document-indexer-network:
+    driver: bridge

@@ -1,0 +1,31 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "python",
+      "args": ["../mcp-servers/filesystem/server.py"],
+      "env": {
+        "WORKSPACE_ROOT": ".",
+        "ALLOWED_DIRECTORIES": "./documents,./docs"
+      },
+      "disabled": false,
+      "autoApprove": []
+    },
+    "sqlserver": {
+      "command": "python",
+      "args": ["../mcp-servers/sqlserver/server.py"],
+      "env": {
+        "SQL_SERVER": "localhost",
+        "SQL_DATABASE": "DocumentAI",
+        "SQL_USER": "sa",
+        "SQL_PASSWORD": "YourStrong@Password123",
+        "READ_ONLY": "true"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "list_tables",
+        "describe_table",
+        "get_table_sample"
+      ]
+    }
+  }
+}

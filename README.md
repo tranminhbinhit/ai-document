@@ -4,11 +4,38 @@ Hệ thống MCP servers biến Kiro thành trợ lý kỹ thuật toàn diện 
 
 ## 🎯 Tổng Quan
 
-Bộ 4 MCP servers tích hợp với Kiro để hỗ trợ:
+Bộ MCP servers + Document Indexer tích hợp với Kiro để hỗ trợ:
 - 📄 **Filesystem MCP** - Đọc và phân tích tài liệu (PDF, DOCX, XLSX)
+- 📚 **Document Indexer** - Tự động index và search tài liệu
 - 🔧 **GitLab MCP** - Browse code, review MRs, monitor pipelines
 - 🗄️ **SQL Server MCP** - Query database, analyze schema (read-only)
 - ☸️ **Kubernetes MCP** - Monitor pods, check logs, debug issues
+
+## 🏗️ Kiến trúc
+
+```
+           Kiro (AI Assistant)
+                  |
+      +-----------+-----------+
+      |                       |
+Filesystem MCP          SQL MCP
+      |                       |
+   Documents          Document Index DB
+                            ↑
+                     Document Indexer
+                       (Auto-sync)
+```
+
+**Document Indexer** tự động:
+1. Theo dõi thư mục documents
+2. Phân tích file mới/thay đổi (PDF, DOCX, XLSX, TXT)
+3. Extract summary và keywords
+4. Lưu metadata vào SQL Server
+
+**Kiro** có thể:
+- Tìm kiếm documents qua SQL MCP (nhanh)
+- Đọc nội dung chi tiết qua Filesystem MCP
+- Phân tích và tổng hợp thông tin từ nhiều documents
 
 ## 🚀 Quick Start
 
@@ -47,11 +74,32 @@ cp .env.example .env
 - Phân tích requirements documents (PDF/DOCX)
 - Extract data từ Excel spreadsheets
 - Hiểu context nghiệp vụ từ tài liệu
+- Làm việc với Filesystem trực tiếp
 
 **Ví dụ:**
 ```
 Đọc file requirements.pdf và tóm tắt các yêu cầu chính
+List files trong thư mục docs
+Parse Excel data từ users.xlsx
 ```
+
+**Chi tiết:** [mcp-servers/filesystem/](mcp-servers/filesystem/)
+
+### Document Indexer - Auto Document Management
+
+**Công dụng:**
+- Tự động theo dõi và index documents
+- Search nhanh theo keywords
+- Metadata và summary tự động
+- Database-backed storage
+
+**Deploy:**
+```bash
+cd document-indexer
+docker-compose up -d
+```
+
+**Chi tiết:** [document-indexer/readme.md](document-indexer/readme.md)
 
 ### 2. GitLab MCP - Development
 
@@ -126,17 +174,16 @@ Analyze events để debug deployment issue
 3. → Comprehensive review comments
 ```
 
-### Analyze New Feature
+### Analyze Documents
 ```
-1. "Implement user profile theo spec.pdf"
+1. "Tìm tất cả tài liệu về API documentation"
    
 2. Kiro tự động:
-   ✓ Parse requirements
-   ✓ Check database schema
-   ✓ Search existing code
-   ✓ Suggest approach
+   ✓ Query Document Index (SQL MCP)
+   ✓ Đọc nội dung các file (Filesystem MCP)
+   ✓ Phân tích và tổng hợp
    
-3. → Implementation plan
+3. → Comprehensive summary
 ```
 
 ## 📚 Documentation
@@ -177,6 +224,14 @@ Xem chi tiết: [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)
 .
 ├── .env                          # Environment variables
 ├── .env.example                  # Template
+│
+├── document-indexer/             # 🆕 Auto document indexing
+│   ├── watcher.py                # File watcher
+│   ├── processor.py              # Document processor
+│   ├── database.py               # Database operations
+│   ├── docker-compose.yml        # Deploy stack
+│   ├── Dockerfile                # Watcher container
+│   └── readme.md                 # Full documentation
 │
 ├── .kiro/
 │   ├── settings/

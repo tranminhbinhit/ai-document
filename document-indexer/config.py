@@ -1,7 +1,8 @@
+import os
+
 DB_CONFIG = {
-    "server": "localhost",
-    "database": "DocumentAI",
-    "username": "sa",
-    "password": "YourPassword",
-    "driver": "ODBC Driver 18 for SQL Server"
+    "server": os.getenv("DB_SERVER", "localhost"),
+    "database": os.getenv("DB_DATABASE", "DocumentAI"),
+    "username": os.getenv("DB_USER", "sa"),
+    "password": os.getenv("DB_PASSWORD", "YourStrong@Password123")
 }

@@ -1,11 +1,13 @@
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import time
+import os
+from pathlib import Path
 
 from processor import process_file
 
 
-WATCH_FOLDER = r"D:\DOC-MCP"
+WATCH_FOLDER = os.getenv("WATCH_FOLDER", r"D:\DOC-MCP")
 
 
 class DocumentHandler(FileSystemEventHandler):
